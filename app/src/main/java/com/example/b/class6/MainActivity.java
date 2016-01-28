@@ -1,5 +1,6 @@
 package com.example.b.class6;
 
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -27,7 +28,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Recipe recipe;
     ItemEntryAdapter customAdapter;
-    public final String gsonFilename = "Class5.json";
+    public final String gsonFilename = "Class6.json";
+    public final String preferencesFileName="com.example.b.class6.SharedPreferences";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +61,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Button savePrefB = (Button) this.findViewById(R.id.savePref);
+        savePrefB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                savePreference(view);
+            }
+        });
+
+        Button showPrefB = (Button) this.findViewById(R.id.showPref);
+        showPrefB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                showPreference(view);
+            }
+        });
+
         buildList();
 
         //This uses the custom adapter in ItemEntryAdapter.java
@@ -80,12 +98,36 @@ public class MainActivity extends AppCompatActivity {
         TextView i=(TextView) this.findViewById(R.id.itemName);
         TextView q=(TextView) this.findViewById(R.id.quantity);
         Item item=new Item(i.getText().toString());
-        ItemEntry itemEntry=new ItemEntry(item,Double.parseDouble(q.getText().toString()),ItemEntry.Units.other);
-        recipe.recipeItems.add(itemEntry);
+        try {
+            ItemEntry itemEntry = new ItemEntry(item, Double.parseDouble(q.getText().toString()), ItemEntry.Units.other);
+            recipe.recipeItems.add(itemEntry);
 
-        this.refreshList();
-        Toast.makeText(getApplicationContext(), "addItemToRecipe", Toast.LENGTH_SHORT).show();
+            this.refreshList();
+            Toast.makeText(getApplicationContext(), "addItemToRecipe", Toast.LENGTH_SHORT).show();
+        }
+        catch(NumberFormatException e)
+        {
+            Toast.makeText(getApplicationContext(), "addItemToRecipe: Quantity not a number", Toast.LENGTH_SHORT).show();
+        }
     }
+
+    public void savePreference(View view){
+        TextView i=(TextView) this.findViewById(R.id.itemName);
+        TextView q=(TextView) this.findViewById(R.id.quantity);
+        SharedPreferences userPrefs = getApplicationContext().getSharedPreferences(preferencesFileName, this.MODE_PRIVATE);
+        SharedPreferences.Editor edit = userPrefs.edit();
+        edit.putString(i.getText().toString(), q.getText().toString());
+        edit.commit();
+        Toast.makeText(getApplicationContext(), "savePreference:"+i.getText().toString()+"="+q.getText().toString(), Toast.LENGTH_SHORT).show();
+    }
+
+    public void showPreference(View view){
+        TextView i=(TextView) this.findViewById(R.id.itemName);
+        SharedPreferences userPrefs = this.getApplicationContext().getSharedPreferences(preferencesFileName, this.MODE_PRIVATE);
+        String testPref = userPrefs.getString(i.getText().toString(), "");
+        Toast.makeText(getApplicationContext(), "showPreference:"+i.getText().toString()+"="+testPref, Toast.LENGTH_SHORT).show();
+    }
+
     public void buildList()
     {
         //This uses the custom adapter in ItemEntryAdapter.java
@@ -137,36 +179,44 @@ public class MainActivity extends AppCompatActivity {
     public void loadGson(View view){
 
         FileInputStream fis=null;
-        try{
-             fis= this.openFileInput(gsonFilename);
-        }
-        catch(java.io.FileNotFoundException e){
-            Toast.makeText(getApplicationContext(),"loadGSON file not found exception",Toast.LENGTH_SHORT).show();
-        }
-        InputStreamReader isr = new InputStreamReader(fis);
-        BufferedReader bufferedReader = new BufferedReader(isr);
         StringBuilder sb = new StringBuilder();
-        String line;
         try{
+            fis= this.openFileInput(gsonFilename);
+            InputStreamReader isr = new InputStreamReader(fis);
+            BufferedReader bufferedReader = new BufferedReader(isr);
+            String line;
             while ((line = bufferedReader.readLine()) != null) {
                 sb.append(line);
             }
         }
+        catch(java.io.FileNotFoundException e){
+            Toast.makeText(getApplicationContext(),"loadGSON file not found exception",Toast.LENGTH_SHORT).show();
+        }
         catch(java.io.IOException e){
             Toast.makeText(getApplicationContext(),"loadGSON IO exception",Toast.LENGTH_SHORT).show();
+        }
+        catch(Exception e)
+        {
+            Toast.makeText(getApplicationContext(),"Other exception:"+e.getMessage(),Toast.LENGTH_SHORT).show();
         }
 
         String json = sb.toString();
         Gson gson = new Gson();
-        //this.recipe.recipeItems = gson.fromJson(json, ItemEntry.class);
 
         Type listType = new TypeToken<ArrayList<ItemEntry>>() {
         }.getType();
-        List<ItemEntry> yourClassList = new Gson().fromJson(json, listType);
-        this.recipe.recipeItems=yourClassList;
+        List<ItemEntry> yourClassList = gson.fromJson(json, listType);
 
-        this.refreshList();
-        this.buildList();
-        Toast.makeText(getApplicationContext(),"loadGSON"+this.recipe.recipeItems.size(),Toast.LENGTH_SHORT).show();
+
+        if(yourClassList != null) {
+            this.recipe.recipeItems=yourClassList;
+            this.refreshList();
+            this.buildList();
+            Toast.makeText(getApplicationContext(), "loadGSON" + this.recipe.recipeItems.size(), Toast.LENGTH_SHORT).show();
+        }
+        else
+        {
+            Toast.makeText(getApplicationContext(), "loadGSON: Nothing to load", Toast.LENGTH_SHORT).show();
+        }
     }
 }
