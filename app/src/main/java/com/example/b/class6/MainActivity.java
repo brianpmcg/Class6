@@ -1,5 +1,6 @@
 package com.example.b.class6;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -92,7 +93,10 @@ public class MainActivity extends AppCompatActivity implements ItemEntryAdapter.
             {
                 ItemEntry value = (ItemEntry)adapter.getItemAtPosition(position);
                 Toast.makeText(getApplicationContext(), "onItemClick: "+value.theItem.itemName+" "+value.itemQuantity, Toast.LENGTH_SHORT).show();
-
+                Intent i = new Intent(getApplicationContext(),ItemActivity.class);
+                i.putExtra("ItemName",value.theItem.itemName);
+                i.putExtra("ItemQuantity",value.itemQuantity);
+                startActivity(i);
             }
 
         });
@@ -159,17 +163,7 @@ public class MainActivity extends AppCompatActivity implements ItemEntryAdapter.
         ListView lv = (ListView) findViewById(R.id.recipeListView);
         customAdapter = new ItemEntryAdapter(this, R.layout.item_entry_row, recipe.recipeItems,this);//List<yourItem>);
         lv.setAdapter(customAdapter);
-        /*lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-            @Override
-            public void onItemClick(AdapterView<?> adapter, View v, int position,
-                                    long arg3) {
-                ItemEntry value = (ItemEntry) adapter.getItemAtPosition(position);
-                Toast.makeText(getApplicationContext(), "onItemClick: " + value.theItem.itemName + " " + value.itemQuantity, Toast.LENGTH_SHORT).show();
-
-            }
-
-        });*/
         Toast.makeText(this, "buildList", Toast.LENGTH_SHORT).show();
     }
     public void refreshList()
