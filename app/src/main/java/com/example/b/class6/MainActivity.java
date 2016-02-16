@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -28,10 +29,11 @@ public class MainActivity extends AppCompatActivity {
 
     private Recipe recipe;
     ItemEntryAdapter customAdapter;
-    public final String gsonFilename = "Class6.json";
+    public final String gsonRecipeFilename = "com.example.b.class6.Recipe.json";
     public final String preferencesFileName="com.example.b.class6.SharedPreferences";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toast.makeText(this, "onCreate" , Toast.LENGTH_SHORT).show();
@@ -53,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+
+
         Button loadGsonB = (Button) this.findViewById(R.id.loadGson);
         loadGsonB.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -67,6 +71,23 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 savePreference(view);
             }
+        });
+
+        this.findViewById(android.R.id.content).getRootView();
+
+        ListView myListView = (ListView) this.findViewById(R.id.recipeListView);
+        myListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> adapter, View v, int position,
+            long arg3)
+            {
+                ItemEntry value = (ItemEntry)adapter.getItemAtPosition(position);
+                Toast.makeText(getApplicationContext(), "onItemClick: "+value.theItem.itemName+" "+value.itemQuantity, Toast.LENGTH_SHORT).show();
+                // assuming string and if you want to get the value on click of list item
+                // do what you intend to do on click of listview row
+            }
+
         });
 
         Button showPrefB = (Button) this.findViewById(R.id.showPref);
@@ -97,9 +118,18 @@ public class MainActivity extends AppCompatActivity {
     public void addItemToRecipe(View view){
         TextView i=(TextView) this.findViewById(R.id.itemName);
         TextView q=(TextView) this.findViewById(R.id.quantity);
-        Item item=new Item(i.getText().toString());
+
+        for (Iterator<ItemEntry> iter = recipe.recipeItems.listIterator(); iter.hasNext(); ) {
+            ItemEntry item = iter.next();
+            if (item.theItem.itemName.equalsIgnoreCase(i.getText().toString())) {
+                //the item is already in the list
+                Toast.makeText(getApplicationContext(), "addItemToRecipe: Warning DUPLICATE ITEM", Toast.LENGTH_SHORT).show();
+            }
+        }
+
         try {
-            ItemEntry itemEntry = new ItemEntry(item, Double.parseDouble(q.getText().toString()), ItemEntry.Units.other);
+
+            ItemEntry itemEntry = new ItemEntry(new Item(i.getText().toString()), Double.parseDouble(q.getText().toString()), ItemEntry.Units.other);
             recipe.recipeItems.add(itemEntry);
 
             this.refreshList();
@@ -165,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
         FileOutputStream outputStream;
 
         try {
-            outputStream = openFileOutput(gsonFilename, this.MODE_PRIVATE);
+            outputStream = openFileOutput(gsonRecipeFilename, this.MODE_PRIVATE);
             outputStream.write(s.getBytes());
             outputStream.close();
         } catch (Exception e) {
@@ -181,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
         FileInputStream fis=null;
         StringBuilder sb = new StringBuilder();
         try{
-            fis= this.openFileInput(gsonFilename);
+            fis= this.openFileInput(gsonRecipeFilename);
             InputStreamReader isr = new InputStreamReader(fis);
             BufferedReader bufferedReader = new BufferedReader(isr);
             String line;
