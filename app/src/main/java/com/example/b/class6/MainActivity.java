@@ -25,7 +25,7 @@ import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ItemEntryAdapter.BtnClickListener {
 
     private Recipe recipe;
     ItemEntryAdapter customAdapter;
@@ -46,6 +46,14 @@ public class MainActivity extends AppCompatActivity {
                 addItemToRecipe(view);
             }
         });
+        Button updateItem = (Button) this.findViewById(R.id.updateItemButton);
+        updateItem.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                updateRecipeItem(view);
+            }
+        });
+        updateItem.setEnabled(false);
 
         Button saveGsonB = (Button) this.findViewById(R.id.saveGson);
         saveGsonB.setOnClickListener(new View.OnClickListener() {
@@ -84,8 +92,7 @@ public class MainActivity extends AppCompatActivity {
             {
                 ItemEntry value = (ItemEntry)adapter.getItemAtPosition(position);
                 Toast.makeText(getApplicationContext(), "onItemClick: "+value.theItem.itemName+" "+value.itemQuantity, Toast.LENGTH_SHORT).show();
-                // assuming string and if you want to get the value on click of list item
-                // do what you intend to do on click of listview row
+
             }
 
         });
@@ -100,19 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
         buildList();
 
-        //This uses the custom adapter in ItemEntryAdapter.java
-        /*ListView lv = (ListView) findViewById(R.id.recipeListView);
-        customAdapter = new ItemEntryAdapter(this, R.layout.item_entry_row, recipe.recipeItems);//List<yourItem>);
-        lv.setAdapter(customAdapter);
-        */
-        //this section just creates a list using the ItemEntry.toString() method
-       /* ListView lv = (ListView) findViewById(R.id.recipeListView);
-        ArrayAdapter<ItemEntry> arrayAdapter = new ArrayAdapter<ItemEntry>(
-                this,
-                android.R.layout.simple_list_item_1,
-                recipe.recipeItems );
 
-        lv.setAdapter(arrayAdapter);*/
     }
 
     public void addItemToRecipe(View view){
@@ -162,8 +157,19 @@ public class MainActivity extends AppCompatActivity {
     {
         //This uses the custom adapter in ItemEntryAdapter.java
         ListView lv = (ListView) findViewById(R.id.recipeListView);
-        customAdapter = new ItemEntryAdapter(this, R.layout.item_entry_row, recipe.recipeItems);//List<yourItem>);
+        customAdapter = new ItemEntryAdapter(this, R.layout.item_entry_row, recipe.recipeItems,this);//List<yourItem>);
         lv.setAdapter(customAdapter);
+        /*lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+            @Override
+            public void onItemClick(AdapterView<?> adapter, View v, int position,
+                                    long arg3) {
+                ItemEntry value = (ItemEntry) adapter.getItemAtPosition(position);
+                Toast.makeText(getApplicationContext(), "onItemClick: " + value.theItem.itemName + " " + value.itemQuantity, Toast.LENGTH_SHORT).show();
+
+            }
+
+        });*/
         Toast.makeText(this, "buildList", Toast.LENGTH_SHORT).show();
     }
     public void refreshList()
@@ -185,11 +191,7 @@ public class MainActivity extends AppCompatActivity {
         Type listType = new TypeToken<ArrayList<ItemEntry>>() {
         }.getType();
         s=gson.toJson(this.recipe.recipeItems,listType);
-        /*Iterator<ItemEntry> recipeIterator = this.recipe.recipeItems.iterator();
-        while (recipeIterator.hasNext()) {
-            s=s+ gson.toJson(recipeIterator.next());
-        }*/
-        
+
 
         Toast.makeText(this,"saveGSON["+s+"]",Toast.LENGTH_SHORT).show();
         FileOutputStream outputStream;
@@ -249,4 +251,45 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getApplicationContext(), "loadGSON: Nothing to load", Toast.LENGTH_SHORT).show();
         }
     }
+
+    public void onDeleteClick(int position) {
+        recipe.recipeItems.remove(position);
+        Toast.makeText(getApplicationContext(), "onDeleteClick: removing item:"+position, Toast.LENGTH_SHORT).show();
+        this.refreshList();
+        this.buildList();
+    }
+    public void onEditClick(int position) {
+        ItemEntry toEdit=recipe.recipeItems.get(position);
+        Toast.makeText(getApplicationContext(), "onEditClick: edit item:"+position, Toast.LENGTH_SHORT).show();
+        TextView i=(TextView) this.findViewById(R.id.itemName);
+        i.setText(toEdit.theItem.itemName);
+        TextView q=(TextView) this.findViewById(R.id.quantity);
+        q.setText(toEdit.itemQuantity + "");
+        Button updateItem = (Button) this.findViewById(R.id.updateItemButton);
+        updateItem.setTag(position);
+        updateItem.setEnabled(true);
+        this.refreshList();
+        this.buildList();
+    }
+
+    public void updateRecipeItem(View v){
+        Button updateItem = (Button) this.findViewById(R.id.updateItemButton);
+        int position=(int)updateItem.getTag();
+        ItemEntry toEdit=recipe.recipeItems.get(position);
+        TextView i=(TextView) this.findViewById(R.id.itemName);
+        TextView q=(TextView) this.findViewById(R.id.quantity);
+        toEdit.theItem.itemName=i.getText().toString();
+        Toast.makeText(getApplicationContext(), "updateRecipeItem:"+position+"["+i.getText().toString()+"["+q.getText().toString()+"]", Toast.LENGTH_SHORT).show();
+        try {
+            toEdit.itemQuantity=Double.parseDouble(q.getText().toString());
+            updateItem.setEnabled(false);
+        }
+        catch(NumberFormatException e)
+        {
+            Toast.makeText(getApplicationContext(), "updateRecipeItem: Quantity not a number", Toast.LENGTH_SHORT).show();
+        }
+        this.refreshList();
+        this.buildList();
+    }
+
 }
