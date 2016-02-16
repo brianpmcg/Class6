@@ -94,8 +94,7 @@ public class MainActivity extends AppCompatActivity implements ItemEntryAdapter.
                 ItemEntry value = (ItemEntry)adapter.getItemAtPosition(position);
                 Toast.makeText(getApplicationContext(), "onItemClick: "+value.theItem.itemName+" "+value.itemQuantity, Toast.LENGTH_SHORT).show();
                 Intent i = new Intent(getApplicationContext(),ItemActivity.class);
-                i.putExtra("ItemName",value.theItem.itemName);
-                i.putExtra("ItemQuantity",value.itemQuantity);
+                i.putExtra("ItemEntry",value);
                 startActivity(i);
             }
 

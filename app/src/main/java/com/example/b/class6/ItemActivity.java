@@ -13,12 +13,14 @@ public class ItemActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_item);
         Bundle extras = getIntent().getExtras();
-        ItemEntry item= new ItemEntry(new Item(extras.getString("ItemName")),extras.getDouble("ItemQuantity"));
-        Toast.makeText(getApplicationContext(), "ItemActivity.onCreate: " + item.theItem.itemName + " " + item.itemQuantity, Toast.LENGTH_SHORT).show();
+        ItemEntry theItemEntry=(ItemEntry)extras.getSerializable("ItemEntry");
+        Toast.makeText(getApplicationContext(), "ItemActivity.onCreate: " + theItemEntry.theItem.itemName + " " + theItemEntry.itemQuantity, Toast.LENGTH_SHORT).show();
 
         TextView i = (TextView) this.findViewById(R.id.itemName);
         TextView q = (TextView) this.findViewById(R.id.itemQuantity);
-        i.setText(item.theItem.itemName);
-        q.setText(item.itemQuantity+"");
+        i.setText(theItemEntry.theItem.itemName);
+        q.setText(theItemEntry.itemQuantity+"");
+
+
     }
 }
